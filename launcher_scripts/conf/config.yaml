@@ -1,0 +1,98 @@
+defaults:
+  - _self_
+  - cluster: bcm  # In Alps, ALWAYS bcm
+  - data_curation: null # TODO(tj.solergibert) Currently not supported in Alps
+  - data_preparation: null #steerlm/steerlm_data_prep1 or steerlm/steerlm_data_prep2_reg # TODO(tj.solergibert) Currently not supported in Alps
+  - training: llama/llama3_1_8b
+  - conversion: null # TODO(tj.solergibert) Currently not supported in Alps
+  - conversion_hf2nemo: null # TODO(tj.solergibert) Currently not supported in Alps
+  - fw_inference: null # TODO(tj.solergibert) Currently not supported in Alps
+  - external_conversion: null # TODO(tj.solergibert) Currently not supported in Alps
+  - fine_tuning: null # TODO(tj.solergibert) Currently not supported in Alps
+  - generic: null # TODO(tj.solergibert) Currently not supported in Alps
+  - peft: null # TODO(tj.solergibert) Currently not supported in Alps
+  - prompt_learning: null # TODO(tj.solergibert) Currently not supported in Alps
+  - adapter_learning: null # TODO(tj.solergibert) Currently not supported in Alps
+  - ia3_learning: null # TODO(tj.solergibert) Currently not supported in Alps
+  - evaluation: null # TODO(tj.solergibert) Currently not supported in Alps
+  - export: null # TODO(tj.solergibert) Currently not supported in Alps
+  - rlhf_rm: null # TODO(tj.solergibert) Currently not supported in Alps
+  - rlhf_ppo: null # TODO(tj.solergibert) Currently not supported in Alps
+  - steerlm_reg : null # either rw_sft/training_rm or ac_sft/gpt_sft # TODO(tj.solergibert) Currently not supported in Alps
+  - ptq: null # TODO(tj.solergibert) Currently not supported in Alps
+  - rag_indexing: null # TODO(tj.solergibert) Currently not supported in Alps
+  - rag_generating: null # TODO(tj.solergibert) Currently not supported in Alps
+  - override hydra/job_logging: stdout
+
+hydra:
+  run:
+    dir: .
+  output_subdir: null
+
+debug: False
+
+# TODO(tj.solergibert) Default stages, check best way to set default
+stages:
+  #- data_preparation
+  - training
+  #- conversion
+  #- conversion_hf2nemo
+  #- prompt_learning
+  #- adapter_learning
+  #- peft
+  #- ia3_learning
+  #- evaluation
+  #- export
+  #- steerlm_reg
+
+cluster_type: bcm  # In Alps, ALWAYS set `bcm`
+launcher_scripts_path: ??? # Path to NeMo Megatron Launch scripts, should end with /launcher_scripts e.g. /users/asolergi/NeMo-Framework-Launcher/launcher_scripts
+experiment_path: ??? # This path should be in the shared filesystem as we are storing both datasets and model checkpoints which are huge
+data_dir: ${experiment_path}/data  # Location to store and read the data.
+base_results_dir: ${experiment_path}/results  # Location to store the results, checkpoints and logs.
+
+wandb_api_key_file: null  # File where the w&B api key is stored. Key must be on the first line.
+
+bcp_no_redirect: True  # If True, all stdout and stderr will not be redirected and appear in the standard logs. If False, all stdout and stderr output will be redirected to individual files on a per-rank basis. Ignored for non-BCP clusters.
+
+# TODO(tj.solergibert) Check these ENV vars
+env_vars:
+  TRANSFORMERS_OFFLINE: 0
+  TORCH_NCCL_AVOID_RECORD_STREAMS: 1
+  NCCL_NVLS_ENABLE: 0
+  NVTE_DP_AMAX_REDUCE_INTERVAL: 0 # Diable FP8 AMAX reduction in the data-parallel domain
+  NVTE_ASYNC_AMAX_REDUCTION: 1 # Enable asynchronous FP8 AMAX reduction
+  NVTE_FUSED_ATTN: 0 # Disable cudnn FA until we've supported it more
+
+# TODO(tj.solergibert) Check NUMA Mapping in Alps
+# GPU Mapping
+numa_mapping:
+  enable: True  # Set to False to disable all mapping (performance will suffer).
+  mode: unique_contiguous  # One of: all, single, single_unique, unique_interleaved or unique_contiguous.
+  scope: node  # Either node or socket.
+  cores: all_logical  # Either all_logical or single_logical.
+  balanced: True  # Whether to assing an equal number of physical cores to each process.
+  min_cores: 1  # Minimum number of physical cores per process.
+  max_cores: 8  # Maximum number of physical cores per process. Can be null to use all available cores.
+
+# Do not modify below, use the values above instead.
+data_preparation_config: ${hydra:runtime.choices.data_preparation}
+data_curation_config: ${hydra:runtime.choices.data_curation}
+training_config: ${hydra:runtime.choices.training}
+fine_tuning_config: ${hydra:runtime.choices.fine_tuning}
+peft_config: ${hydra:runtime.choices.peft}
+prompt_learning_config: ${hydra:runtime.choices.prompt_learning}
+adapter_learning_config: ${hydra:runtime.choices.adapter_learning}
+ia3_learning_config: ${hydra:runtime.choices.ia3_learning}
+evaluation_config: ${hydra:runtime.choices.evaluation}
+conversion_config: ${hydra:runtime.choices.conversion}
+export_config: ${hydra:runtime.choices.export}
+rlhf_rm_config: ${hydra:runtime.choices.rlhf_rm}
+rlhf_ppo_config: ${hydra:runtime.choices.rlhf_ppo}
+steerlm_reg_config : ${hydra:runtime.choices.steerlm_reg}
+conversion_hf2nemo_config: ${hydra:runtime.choices.conversion_hf2nemo}
+fw_inference_config: ${hydra:runtime.choices.fw_inference}
+external_conversion_config: ${hydra:runtime.choices.external_conversion}
+ptq_config: ${hydra:runtime.choices.ptq}
+rag_indexing_config: ${hydra:runtime.choices.rag_indexing}
+rag_generating_config: ${hydra:runtime.choices.rag_generating}

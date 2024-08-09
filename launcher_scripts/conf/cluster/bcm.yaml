@@ -1,0 +1,12 @@
+job_name_prefix: 'todi-nemo-megatron'
+gres: 'gpu:4'
+cpus_per_task: 288
+environment: /store/swissai/a06/.nemo_toni/NeMo.toml
+srun_args:
+  - '--cpus-per-task'
+  - '$SLURM_CPUS_PER_TASK'
+  - '--jobid'
+  - $SLURM_JOB_ID
+  - '--wait'
+  - '60'
+  - '--unbuffered'

@@ -223,12 +223,11 @@ class NemoMegatronStage:
         backwards compatibility.
         """
         append_to_file = f"{stage_cfg_path.parent}/git_log.txt"
+        # TODO(tj.solergibert) Current Dockerfile installs NeMo & Megatron in /workspace NOT /opt
         return [
             f"(echo PYT$\"NVIDIA_PYTORCH_VERSION\" && \
-                git --git-dir=/opt/NeMo/.git log -n 5 --format='NeMo;%h;%aD;%s' && \
-                git --git-dir=/opt/megatron-lm/.git log -n 5 --format='megatron-lm;%h;%aD;%s' && \
-                git --git-dir=/opt/NeMo-Framework-Launcher/.git log -n 5 --format='NeMo-Framework-Launcher;%h;%aD;%s' && \
-                git --git-dir=/opt/NeMo-Framework-Launcher/.git log -n 5 --format='NeMo-Framework-Launcher;%h;%aD;%s') > {append_to_file}"
+                git --git-dir=/workspace/NeMo/.git log -n 5 --format='NeMo;%h;%aD;%s' && \
+                git --git-dir=/workspace/megatron-lm/.git log -n 5 --format='megatron-lm;%h;%aD;%s') > {append_to_file}"
         ]
 
     def _make_k8s_spec_file(
@@ -655,7 +654,7 @@ class NeMoStage(NemoMegatronStage):
         # Shared with fine-tuning and prompt learning
         command_groups = [[]]
         command_groups[0] += self._make_wandb_login_command()
-        command_groups[0] += self._make_nemo_path_command()
+        # command_groups[0] += self._make_nemo_path_command() # NOTE(tj.solergibert) Deactivating nemo path command
         command_groups[0] += self._make_git_log_command(stage_cfg_path)
         # command_groups[0] += self._make_numa_mapping_command()
 

@@ -775,7 +775,7 @@ def _make_sbatch_string(
     if srun_args is None:
         srun_args = []
 
-    if NEMO_LAUNCHER_MEMORY_MEASURE:
+    if False: #NEMO_LAUNCHER_MEMORY_MEASURE: # NOTE(tj.solergibert) We still need to test the behaiviour of this memory utility with the default srun ags $SLURM_CPUS_PER_TASK and $SLURM_JOB_ID
         srun_args += ["--overlap"]
 
         mem_stdout = stdout.replace("_%j", "_mem_%j")
@@ -815,6 +815,8 @@ def _make_sbatch_string(
                     het_group,
                 ]
             )
+            # NOTE(tj.solergibert) shlex.join transforms $SLURM_CPUS_PER_TASK into '$SLURM_CPUS_PER_TASK' (w/ '')
+            srun_cmd = srun_cmd.replace("'", '')
             command = ";\n  ".join(command_group)
             lines += [
                 "",
@@ -837,6 +839,8 @@ def _make_sbatch_string(
                     *srun_args,
                 ]
             )
+            # NOTE(tj.solergibert) shlex.join transforms $SLURM_CPUS_PER_TASK into '$SLURM_CPUS_PER_TASK' (w/ '')
+            srun_cmd = srun_cmd.replace("'", '')
             command = ";\n  ".join(command_group)
             lines += [
                 "",
