@@ -771,10 +771,7 @@ def _make_sbatch_string(
     # commandline (this will run the function and args specified in the file provided as argument)
     # We pass --output and --error here, because the SBATCH command doesn't work as expected with a filename pattern
     stderr_flags = [] if stderr_to_stdout else ["--error", stderr]
-    container_flags = ["--container-image", container_image] if container_image else []
-    container_flags += (
-        ["--container-mounts", container_mounts] if container_mounts else []
-    )
+    
     if srun_args is None:
         srun_args = []
 
@@ -790,7 +787,6 @@ def _make_sbatch_string(
                 "--ntasks-per-node=1",
                 "--output",
                 mem_stdout,
-                *container_flags,
                 *srun_args,
             ]
         )
@@ -815,7 +811,6 @@ def _make_sbatch_string(
                     "--output",
                     het_stdout,
                     *het_stderr,
-                    *container_flags,
                     *srun_args,
                     het_group,
                 ]
@@ -839,7 +834,6 @@ def _make_sbatch_string(
                     "--output",
                     stdout,
                     *stderr_flags,
-                    *container_flags,
                     *srun_args,
                 ]
             )
@@ -1040,10 +1034,6 @@ def _make_sbatch_string_ft_launcher(
     # commandline (this will run the function and args specified in the file provided as argument)
     # We pass --output and --error here, because the SBATCH command doesn't work as expected with a filename pattern
     stderr_flags = [] if stderr_to_stdout else ["--error", stderr]
-    container_flags = ["--container-image", container_image] if container_image else []
-    container_flags += (
-        ["--container-mounts", container_mounts] if container_mounts else []
-    )
 
     if NEMO_LAUNCHER_MEMORY_MEASURE:
         srun_args += ["--overlap"]
@@ -1057,7 +1047,6 @@ def _make_sbatch_string_ft_launcher(
                 "--ntasks-per-node=1",
                 "--output",
                 mem_stdout,
-                *container_flags,
                 *srun_args,
             ]
         )
@@ -1086,7 +1075,6 @@ def _make_sbatch_string_ft_launcher(
                     "--output",
                     stdout,
                     *stderr_flags,
-                    *container_flags,
                     *srun_args,
                 ]
             )
