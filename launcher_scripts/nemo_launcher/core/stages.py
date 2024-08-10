@@ -655,7 +655,7 @@ class NeMoStage(NemoMegatronStage):
         command_groups = [[]]
         command_groups[0] += self._make_wandb_login_command()
         # command_groups[0] += self._make_nemo_path_command() # NOTE(tj.solergibert) Deactivating nemo path command
-        command_groups[0] += self._make_git_log_command(stage_cfg_path)
+        # command_groups[0] += self._make_git_log_command(stage_cfg_path) # NOTE(tj.solergibert) Deactivating nemo git command. NeMo & megatron-lm aren't git repos inside the container
         # command_groups[0] += self._make_numa_mapping_command()
 
         # _cuda_device_max_connections and _cuda_visible_devices cannot be used as command prefix on BCP
