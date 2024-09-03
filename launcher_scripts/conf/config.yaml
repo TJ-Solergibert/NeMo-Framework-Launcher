@@ -4,6 +4,7 @@ defaults:
   - data_curation: null # TODO(tj.solergibert) Currently not supported in Alps
   - data_preparation: null #steerlm/steerlm_data_prep1 or steerlm/steerlm_data_prep2_reg # TODO(tj.solergibert) Currently not supported in Alps
   - training: llama/llama3_1_8b
+  - conversion_nemo2hf: generic/conversion_nemo2hf
   - conversion: null # TODO(tj.solergibert) Currently not supported in Alps
   - conversion_hf2nemo: null # TODO(tj.solergibert) Currently not supported in Alps
   - fw_inference: null # TODO(tj.solergibert) Currently not supported in Alps
@@ -53,16 +54,13 @@ base_results_dir: ${experiment_path}/results  # Location to store the results, c
 
 wandb_api_key_file: null  # File where the w&B api key is stored. Key must be on the first line.
 
-bcp_no_redirect: True  # If True, all stdout and stderr will not be redirected and appear in the standard logs. If False, all stdout and stderr output will be redirected to individual files on a per-rank basis. Ignored for non-BCP clusters.
-
 # TODO(tj.solergibert) Check these ENV vars
 env_vars:
   TRANSFORMERS_OFFLINE: 0
   TORCH_NCCL_AVOID_RECORD_STREAMS: 1
   NCCL_NVLS_ENABLE: 0
-  NVTE_DP_AMAX_REDUCE_INTERVAL: 0 # Diable FP8 AMAX reduction in the data-parallel domain
-  NVTE_ASYNC_AMAX_REDUCTION: 1 # Enable asynchronous FP8 AMAX reduction
-  NVTE_FUSED_ATTN: 0 # Disable cudnn FA until we've supported it more
+  NEMO_LOG_MEMORY_USAGE: 1 # Log memory usage - NeMo callback
+  NEMO_LAUNCHER_MEMORY_MEASURE: 1 # Log memory usage - NeMo Launcher `nvidia-smi`
 
 # TODO(tj.solergibert) Check NUMA Mapping in Alps
 # GPU Mapping
@@ -90,6 +88,7 @@ export_config: ${hydra:runtime.choices.export}
 rlhf_rm_config: ${hydra:runtime.choices.rlhf_rm}
 rlhf_ppo_config: ${hydra:runtime.choices.rlhf_ppo}
 steerlm_reg_config : ${hydra:runtime.choices.steerlm_reg}
+conversion_nemo2hf_config: ${hydra:runtime.choices.conversion_nemo2hf}
 conversion_hf2nemo_config: ${hydra:runtime.choices.conversion_hf2nemo}
 fw_inference_config: ${hydra:runtime.choices.fw_inference}
 external_conversion_config: ${hydra:runtime.choices.external_conversion}

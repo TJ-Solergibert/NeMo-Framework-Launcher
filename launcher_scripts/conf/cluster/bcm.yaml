@@ -1,13 +1,13 @@
-job_name_prefix: 'todi-nemo-megatron'
-gres: 'gpu:4'
-cpus_per_task: 72 # PTL is running 1 SLURM task per GPU while torchrun runs only 1 SLURM task per node
+job_name_prefix: nemo-
+gres: gpu:4
+cpus_per_task: 72
 environment: /store/swissai/a06/.NeMo/container/nemo.toml
-reservation: todi
+
 srun_args:
-  - '--cpus-per-task'
-  - '$SLURM_CPUS_PER_TASK'
-  - '--jobid'
-  - $SLURM_JOB_ID
-  - '--wait'
-  - '60'
-  - '--unbuffered'
+- --cpus-per-task
+- $SLURM_CPUS_PER_TASK
+- --jobid
+- $SLURM_JOB_ID
+- --wait
+- '60'
+- --unbuffered
