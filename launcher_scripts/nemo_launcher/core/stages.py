@@ -2663,3 +2663,48 @@ class PostTrainingQuantization(NeMoStage):
         return (
             self._nemo_code_path / "examples/nlp/language_modeling/megatron_gpt_ptq.py"
         )
+
+class ConversionNeMo2HF(NemoMegatronStage):
+    """Convert .nemo checkpoints to HF"""
+
+    def setup_stage_vars(self, cfg: OmegaConf):
+        """Setup the stage vars, i.e. stage name and stage cfg"""
+        self.stage_name = "conversion_nemo2hf"
+        self.stage_cfg = cfg.get("conversion_nemo2hf")
+
+    def make_stage_command_groups(self, stage_cfg_path: Path) -> List[List[str]]:
+        """
+        Make the command groups for current stage
+        Command groups is a list of command group. A command group is defined as:
+              0. Command group is a list of command strings
+              1. Each command group occupies one bcprun, srun or bash
+              2. Each command group eventually has multiple commands connected by ";"
+
+        :param Path stage_cfg_path: path to interpolated and saved configuration
+        :return: command groups for current stage
+        :rtype: List[List[str]]
+        """
+
+        command_groups = [[]]
+
+        code_path = (
+            self._nemo_code_path
+            / f"scripts/checkpoint_converters/convert_{self.stage_cfg.get('model')}_nemo_to_hf.py"
+        )
+
+        args = create_args_list(
+            replace_underscore=False,
+            input_name_or_path=self.stage_cfg.get("nemo_filename"),
+            input_tokenizer=self.stage_cfg.get("tokenizer_filename"),
+            output_path=os.path.join(self.stage_cfg.get("hf_output_path"), "original", "pytorch_model.bin"),
+            hf_input_path=self.stage_cfg.get("hf_input_path"),
+            hf_output_path=self.stage_cfg.get("hf_output_path"),
+        )
+
+        core_command = [f"python3 -u {code_path}", *args, "--cpu-only"]
+        core_command_string = " \\\n  ".join(core_command)
+        command_groups[0] += [core_command_string]
+        command_groups = clean_command_groups(command_groups)
+
+        return command_groups
+

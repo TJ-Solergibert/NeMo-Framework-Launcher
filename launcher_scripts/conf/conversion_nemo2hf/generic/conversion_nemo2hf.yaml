@@ -1,0 +1,12 @@
+run:
+  name: converting
+  results_dir: ${base_results_dir}/${.name}
+  time_limit: "00:59:59"
+  nodes: 1
+  ntasks_per_node: 1
+
+nemo_filename: ??? # Path to the .nemo checkpoint
+tokenizer_filename: ${conversion_nemo2hf.hf_input_path} # Path to a LOCAL folder which contains a tokenizer that can be loaded with `.from_pretrained`
+model: llama # Model architecture. Currently we only support llama
+hf_input_path: ??? # Path to a LOCAL folder which contains the target model that can be loaded with `.from_pretrained`. You can find the llama models in `/store/swissai/a06/models/`
+hf_output_path: ??? # Path to store the converted checkpoint
