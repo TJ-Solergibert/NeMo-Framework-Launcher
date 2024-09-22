@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import copy
+import functools
 import glob
 import os
 import random
@@ -797,17 +798,21 @@ class CustomDataPreparation(DataStage):
 
         filtered_files = []
 
-        for raw_file in os.listdir(raw_dataset_files):
-            # Only select files that end in .jsonl
-            if not Path(raw_file).suffix.lower() in [".json", ".jsonl", "json.gz"]:
+        raw_dataset_files = [os.path.join(dp, f) for dp, _, fn in os.walk(os.path.expanduser(raw_dataset_files)) for f in fn]
+
+        for raw_file in raw_dataset_files:
+            # Only select files that end in .json/.jsonl/.json.gz
+            if not Path(raw_file).suffix.lower() in [".json", ".jsonl", "json.gz", "jsonl.gz", ".gz"]:
                 continue
-            filtered_files.append(os.path.join(raw_dataset_files, raw_file))
+            filtered_files.append(raw_file)
         return filtered_files
 
     def setup_folder_and_data(self) -> None:
         """Setup job/data folders and fine-tuning/prompt-learning dataset"""
         job_path = self.get_job_path()
         job_path.folder.mkdir(parents=True, exist_ok=True)
+        custom_dataset_path = self.get_custom_dataset_dir_path()
+        custom_dataset_path.folder.mkdir(parents=True, exist_ok=True)
 
         # Setup preprocess data
         data_cfg = self.stage_cfg
@@ -932,6 +937,11 @@ class CustomDataPreparation(DataStage):
         sub_stage_command = [f"python3 -u {code_path}", *args]
         sub_stage_command = " \\\n  ".join(sub_stage_command)
         return [sub_stage_command]
+    
+    @functools.lru_cache()
+    def get_custom_dataset_dir_path(self) -> JobPaths:
+        """Fetch a JobPaths object for custom_dataset_dir"""
+        return JobPaths(self.stage_cfg.get("preprocessed_dataset_dir"), self.job_name)
 
 
 class SteerLMDataPreparation(DataStage):

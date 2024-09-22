@@ -60,7 +60,6 @@ env_vars:
   TORCH_NCCL_AVOID_RECORD_STREAMS: 1
   NCCL_NVLS_ENABLE: 0
   NEMO_LOG_MEMORY_USAGE: 1 # Log memory usage - NeMo callback
-  NEMO_LAUNCHER_MEMORY_MEASURE: 1 # Log memory usage - NeMo Launcher `nvidia-smi`
 
 # TODO(tj.solergibert) Check NUMA Mapping in Alps
 # GPU Mapping

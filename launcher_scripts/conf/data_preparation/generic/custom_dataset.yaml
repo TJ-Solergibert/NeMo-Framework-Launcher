@@ -1,0 +1,39 @@
+run:
+  name: preprocessing_custom_dataset
+  results_dir: ${base_results_dir}/${.name}
+  time_limit: "11:59:59"
+  node_array_size: 2
+  cpus_per_node: 288
+  workers_per_node: 24 # Number of workers per node in preprocessing step.
+
+preprocessed_dataset_dir: ${data_preparation.run.results_dir} # Path to store the preprocessing stage artifacts, such as the worker mapping and the preprocessed dataset. # TODO(tj.solergibert) This directory MUST exist
+
+# ------------------------------------- Tokenizing Dataset ------------------------------------- #
+preprocess_data: True  # True to preprocess the data from json, jsonl or json.gz files, False otherwise.
+raw_dataset_files: # Either a string (path to a SINGLE dataset folder) or a list (of files) # NOTE(tj.solergibert) When setting a folder, you can only specify ONE
+  - null # Each file should be input json, jsonl or json.gz file
+tokenizer_library: huggingface # Name of the tokenizer library, such as "sentencepiece", "huggingface" or "megatron"
+tokenizer_type: ???  # Type of tokenizer to use if not training a tokenizer from scratch, such as "GPT2BPETokenizer" or "mistralai/Mistral-7B-v0.1"
+preprocess_worker_mapping: ${.preprocessed_dataset_dir}/preprocess_mapping.txt # Path to store the files each tokenizing worker will process. Generated automatically by the Launcher
+preprocessed_dir: ${.preprocessed_dataset_dir}/preprocessed # Path to store the preprocessed dataset
+
+# NOTE(tj.solergibert) Only useful when training the tokenizer
+tokenizer_model: null # ${.bpe_save_dir}/${data_preparation.train_tokenizer_args.model_prefix}.model # trained SentencePiece tokenizer model
+vocab_file: null  # Path to a vocab file if using BPE tokenizer. Leave "null" if not using BPE.
+merges_file: null  # Path to a merges file if using BPE tokenizer. Leave "null" if not using BPE.
+# ---------------------------------------------------------------------------------------------- #
+# ------------------------------------- Tokenizer Training ------------------------------------- #
+train_tokenizer: False # True to train a sentence piece tokenizer # TODO(tj.solergibert) Currently broken, check https://github.com/NVIDIA/NeMo-Framework-Launcher/blob/4cb000962b1b25e9f4feabe2a0c335fadaf70802/launcher_scripts/nemo_launcher/core/data_stages.py#L903C48-L903C57 & https://github.com/NVIDIA/NeMo-Framework-Launcher/blob/4cb000962b1b25e9f4feabe2a0c335fadaf70802/launcher_scripts/nemo_launcher/core/data_stages.py#L932C9-L932C26
+train_tokenizer_args: # For all options please check: https://github.com/google/sentencepiece/blob/master/doc/options.md
+   input: null # text file for training tokenizer
+   input_format: "text" # text or tsv
+   model_prefix: "custom_sp_tokenizer"
+   model_type: "bpe" # model algorithm: unigram, bpe, word or char
+   vocab_size: 8000 # Vocabulary size
+   character_coverage: 0.9995 # character coverage to determine the minimum symbols
+   unk_id: 1
+   bos_id: 2
+   eos_id: 3
+   pad_id: 0
+bpe_save_dir: ${.preprocessed_dataset_dir}/bpe # Dir to save sentence piece tokenizer model and vocab files
+# ---------------------------------------------------------------------------------------------- #
