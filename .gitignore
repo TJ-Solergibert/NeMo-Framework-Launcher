@@ -155,3 +155,5 @@ dmypy.json
 *results*
 *tmp_test_model*
 *workspace_test*
+auto_configurator/
+
