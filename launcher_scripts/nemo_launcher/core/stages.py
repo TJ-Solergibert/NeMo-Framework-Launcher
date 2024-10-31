@@ -700,7 +700,7 @@ class NeMoStage(NemoMegatronStage):
         hydra_override = self._make_hydra_override()
 
         command = [
-            f"python3 -u {code_path} ",
+            f"numactl --membind=0-3 python3 -u {code_path} ",
             f"--config-path={stage_cfg_path.parents[0]}",
             f"--config-name={stage_cfg_path.name}",
             *hydra_override,
@@ -1685,7 +1685,7 @@ class Conversion(NemoMegatronStage):
 
         args += ["--bcp"] if self.cluster == "bcp" else []
 
-        core_command = [f"python3 -u {code_path}", *args]
+        core_command = [f"numactl --membind=0-3 python3 -u {code_path}", *args]
         core_command_string = " \\\n  ".join(core_command)
         command_groups[-1] += [core_command_string]
         command_groups = clean_command_groups(command_groups)
@@ -2664,6 +2664,7 @@ class PostTrainingQuantization(NeMoStage):
             self._nemo_code_path / "examples/nlp/language_modeling/megatron_gpt_ptq.py"
         )
 
+# TODO(tj.solergibert) Change from NeMo2HF to from Megatron2HF
 class ConversionNeMo2HF(NemoMegatronStage):
     """Convert .nemo checkpoints to HF"""
 

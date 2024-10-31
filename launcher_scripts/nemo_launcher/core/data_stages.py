@@ -934,7 +934,7 @@ class CustomDataPreparation(DataStage):
                     vocab_file=data_cfg.vocab_file, merges_file=data_cfg.merges_file
                 )
 
-        sub_stage_command = [f"python3 -u {code_path}", *args]
+        sub_stage_command = [f"numactl --membind=0-3 python3 -u {code_path}", *args]
         sub_stage_command = " \\\n  ".join(sub_stage_command)
         return [sub_stage_command]
     

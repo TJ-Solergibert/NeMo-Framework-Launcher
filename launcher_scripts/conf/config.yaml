@@ -49,8 +49,6 @@ stages:
 cluster_type: bcm  # In Alps, ALWAYS set `bcm`
 launcher_scripts_path: ??? # Path to NeMo Megatron Launch scripts, should end with /launcher_scripts e.g. /users/asolergi/NeMo-Framework-Launcher/launcher_scripts
 experiment_path: ??? # This path should be in the shared filesystem as we are storing both datasets and model checkpoints which are huge
-data_dir: ${experiment_path}/data  # Location to store and read the data.
-base_results_dir: ${experiment_path}/results  # Location to store the results, checkpoints and logs.
 
 wandb_api_key_file: null  # File where the w&B api key is stored. Key must be on the first line.
 
@@ -59,7 +57,7 @@ env_vars:
   TRANSFORMERS_OFFLINE: 0
   TORCH_NCCL_AVOID_RECORD_STREAMS: 1
   NCCL_NVLS_ENABLE: 0
-  NEMO_LOG_MEMORY_USAGE: 1 # Log memory usage - NeMo callback
+  NEMO_LOG_MEMORY_USAGE: 0 # Log memory usage - NeMo callback
 
 # TODO(tj.solergibert) Check NUMA Mapping in Alps
 # GPU Mapping

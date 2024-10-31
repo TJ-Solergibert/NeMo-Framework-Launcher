@@ -1,7 +1,10 @@
 job_name_prefix: nemo-
 gres: gpu:4
 cpus_per_task: 72
-environment: /store/swissai/a06/.NeMo/container/nemo.toml
+environment: /store/swissai/a06/.NeMo/container/nemo-latest.toml
+account: a06
+reservation: sai-a06
+mem: 460000
 
 srun_args:
 - --cpus-per-task
