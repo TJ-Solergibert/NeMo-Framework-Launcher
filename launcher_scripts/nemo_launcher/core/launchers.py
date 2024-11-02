@@ -410,8 +410,8 @@ class SlurmLauncher(Launcher):
         eq_dict = self._equivalence_dict()
         if eq_dict is not None:
             params = {eq_dict.get(k, k): v for k, v in params.items()}
-        if "mem" in params:
-            params["mem"] = _convert_mem(params["mem"])
+        # if "mem" in params:
+        #     params["mem"] = _convert_mem(params["mem"])
         return params
 
     def _update_parameters(self, **kwargs: Any) -> None:
