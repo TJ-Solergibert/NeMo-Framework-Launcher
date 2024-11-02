@@ -7,6 +7,7 @@ NEMO_FRAMEWORK_LAUNCHER_DIR=/users/asolergi/NeMo-Framework-Launcher
 EXPERIMENT_PATH=/store/swissai/a06/.NeMo/BenchTodiV2
 # export NEMO_LAUNCHER_MEMORY_MEASURE: 1 # Currently not working! Log memory usage - NeMo Launcher `nvidia-smi`
 export NEMO_LAUNCHER_DEBUG=1 # NOTE(tj.solergibert) Create slurm scripts & folders but DON'T submit job w/ sbatch
+export ENROOT_LIBRARY_PATH=/capstor/scratch/cscs/fmohamed/enrootlibn
 
 # VARS
 NAME=GBS-2048
