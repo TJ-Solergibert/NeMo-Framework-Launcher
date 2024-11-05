@@ -21,13 +21,14 @@ trainer:
   use_distributed_sampler: False
   max_epochs: null
   max_steps: 3000 # consumed_samples = global_step * global_batch_size
-  max_time: "99:11:59:59" # NOTE(tj.solergibert) The training will automatically stop after days:hours:minutes:seconds time
+  max_time: "99:23:59:59" # NOTE(tj.solergibert) The training will automatically stop after days:hours:minutes:seconds time
   log_every_n_steps: 10
   val_check_interval: 200 # NOTE(tj.solergibert) RUN NO VALIDATION
   limit_val_batches: 0 # NOTE(tj.solergibert) RUN NO VALIDATION
   limit_test_batches: 0 # NOTE(tj.solergibert) RUN NO TEST
   accumulate_grad_batches: 1
   gradient_clip_val: 1.0
+
 exp_manager:
   explicit_log_dir: ${training.run.results_dir}/results # TODO(tj.solergibert) Delete this results folder!
   exp_dir: null
@@ -69,16 +70,31 @@ exp_manager:
   #     initial_rank_heartbeat_timeout: 600  # wait for 10 minutes for the initial heartbeat
   #     rank_heartbeat_timeout: 300  # wait for 5 minutes for subsequent heartbeats
   #     calculate_timeouts: True # estimate more accurate timeouts based on observed intervals
+
 model:
+  # The following two settings are used for continual training:
+  restore_from_path: null # Set this to a .nemo file path to restore only the model weights.
+  restore_from_ckpt: null # Set this to a training ckpt path to restore both model weights and optimizer states
+  # NOTE(tj.solergibert): https://github.com/NVIDIA/NeMo/blob/23c7de1b6e5858547541f26d2baa20d5371ea141/examples/nlp/language_modeling/megatron_gpt_pretraining.py#L62
+
+  # use GPTModel from megatron.core
   mcore_gpt: True
-  resume_from_checkpoint: null # Start new pretraining or resume from a checkpoint if it exists  https://github.com/NVIDIA/NeMo/blob/23c7de1b6e5858547541f26d2baa20d5371ea141/examples/nlp/language_modeling/megatron_gpt_pretraining.py#L62
-  micro_batch_size: 1
-  global_batch_size: 2048
+  
+  # specify micro_batch_size, global_batch_size, and model parallelism
+  # gradient accumulation will be done automatically based on data_parallel_size
+  micro_batch_size: 1 # limited by GPU memory
+  global_batch_size: 2048 # will use more micro batches to reach global batch size
   tensor_model_parallel_size: 4
   pipeline_model_parallel_size: 8
   virtual_pipeline_model_parallel_size: 5 # NOTE(tj.solergibert) Num layers = 80, (80 / pipeline_model_parallel_size) / 2
-  sequence_parallel: True
   context_parallel_size: 1 # TODO(tj.solergibert) Check CP
+
+  # Sequence Parallelism
+  # Makes tensor parallelism more memory efficient for LLMs (20B+) by parallelizing layer norms and dropout sequentially
+  # See Reducing Activation Recomputation in Large Transformer Models: https://arxiv.org/abs/2205.05198 for more details.
+  sequence_parallel: True
+  
+  # Model architecture
   encoder_seq_length: 8192
   max_position_embeddings: ${training.model.encoder_seq_length}
   num_layers: 80
@@ -108,7 +124,6 @@ model:
   normalize_attention_scores: True
   position_embedding_type: rope
   rotary_percentage: 1.0
-  apply_rope_fusion: True
   attention_type: multihead
   share_embeddings_and_output_weights: False
   scale_positional_embedding: True
@@ -116,41 +131,49 @@ model:
     library: huggingface
     type: /store/swissai/a06/models/Meta-Llama-3.1-8B
     use_fast: True
+
+  # Mixed precision
   native_amp_init_scale: 4294967296
   native_amp_growth_interval: 1000
   hysteresis: 2
   fp32_residual_connection: False
   fp16_lm_cross_entropy: False
-  megatron_amp_O2: True
+  
+  # Megatron O2-style half-precision
+  megatron_amp_O2: True # Enable O2-level automatic mixed precision using main parameters
   grad_allreduce_chunk_size_mb: 125
+
+  # Optimizations
+  defer_embedding_wgrad_compute: True
+  wgrad_deferral_limit: 22
+  overlap_p2p_comm: True
+  batch_p2p_comm: False
+  
+  # Fusion
+  apply_rope_fusion: True
   grad_div_ar_fusion: True
   gradient_accumulation_fusion: True # NOTE(tj.solergibert) https://github.com/NVIDIA/Megatron-LM/blob/01945b98d1ea3a2acb5e8301e181a328104f4856/megatron/core/tensor_parallel/layers.py#L41C5-L41C42 & https://github.com/NVIDIA/Megatron-LM/blob/01945b98d1ea3a2acb5e8301e181a328104f4856/megatron/core/tensor_parallel/layers.py#L575
   cross_entropy_loss_fusion: True
   bias_activation_fusion: True
   bias_dropout_add_fusion: True
   masked_softmax_fusion: True
+
+  # Miscellaneous
   seed: 1234
   use_cpu_initialization: False
   onnx_safe: False
   apex_transformer_log_level: 30
   gradient_as_bucket_view: True
   sync_batch_comm: False
-  activations_checkpoint_granularity: null
-  activations_checkpoint_method: null
-  activations_checkpoint_num_layers: null
-  num_micro_batches_with_partial_activation_checkpoints: null
-  activations_checkpoint_layers_per_pipeline: null
-  defer_embedding_wgrad_compute: True
-  wgrad_deferral_limit: 22
   deterministic_mode: False
-
+  
   # Distributed checkpoint setup
   dist_ckpt_format: 'torch_dist' # Set to 'torch_dist' to use PyTorch distributed checkpoint format.
   dist_ckpt_load_on_device: True # whether to load checkpoint weights directly on GPU or to CPU
   dist_ckpt_parallel_save: True
   dist_ckpt_assume_constant_structure: True # set to True only if the state dict structure doesn't change within a single job. Allows caching some computation across checkpoint saves.
 
-  ## Transformer Engine
+  # Transformer Engine
   transformer_engine: True
   fp8: False # enables fp8 in TransformerLayer forward
   fp8_e4m3: False # sets fp8_format = recipe.Format.E4M3
@@ -161,9 +184,10 @@ model:
   fp8_amax_compute_algo: max # 'most_recent' or 'max'. Algorithm for computing amax from history
   ub_tp_comm_overlap: False
   use_flash_attention: True # Use flash attention in self-attention module, this config does nothing when transformer_engine=True
-  overlap_p2p_comm: True
-  batch_p2p_comm: False
-  gc_interval: 100
+
+  # Interval of the host memory garbage collection. When it is zero, collectiion relies on the automatic garbage collector.
+  # If an interger value larger than zero is set, collection is done manually by the batch step interval of `gc_interval`.
+  gc_interval: 0
 
   # Profilers
   nsys_profile: # NOTE(tj.solergibert) nsys profile -s none -o <profile filepath> -t cuda,nvtx --force-overwrite true --capture-range=cudaProfilerApi --capture-range-end=stop python ./examples/...
@@ -173,6 +197,7 @@ model:
     end_step: 20 # Global batch to end profiling
     ranks: [0] # Global rank IDs to profile
     gen_shape: True # Generate model and kernel details including input shapes
+  
   memory_profile:
     enabled: False # NOTE(tj.solergibert) Not working on Todi (RuntimeError: record_context_cpp is not support on non-linux non-x86_64 platforms)
     start_step: 10  # Global batch to start profiling
@@ -198,6 +223,7 @@ model:
       warmup_steps: 2000
       constant_steps: 11873
       min_lr: 1.0e-05
+
   data:
     data_impl: mmap
     splits_string: 900,50,50
@@ -224,9 +250,12 @@ model:
     # "model.data.data_prefix: {train:[1.0,/path/to/data], validation:[/path/to/data], test:[/path/to/test]}"
     data_prefix: ???
 
-## Megatron timers
-enable_megatron_timers: True
-megatron_timer_kwargs:
-  log_every_n_steps: 10
-  log_mode: minmax
-  barrier: False
+  ## Megatron timers
+  enable_megatron_timers: True
+  megatron_timer_kwargs:
+    log_every_n_steps: 10
+    log_mode: minmax
+    barrier: False
+
+
+  
