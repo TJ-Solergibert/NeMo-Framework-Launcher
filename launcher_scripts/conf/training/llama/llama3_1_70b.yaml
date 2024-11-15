@@ -16,11 +16,11 @@ trainer:
   devices: 4
   accelerator: gpu
   precision: bf16
-  logger: False # logger provided by exp_manager
+  logger: False # Logger provided by exp_manager
   enable_checkpointing: False
   use_distributed_sampler: False
   max_epochs: null
-  max_steps: 3000 # consumed_samples = global_step * global_batch_size
+  max_steps: 3000 # Consumed_samples = global_step * global_batch_size
   max_time: "99:23:59:59" # NOTE(tj.solergibert) The training will automatically stop after days:hours:minutes:seconds time
   log_every_n_steps: 10
   val_check_interval: 200 # NOTE(tj.solergibert) RUN NO VALIDATION
@@ -44,8 +44,8 @@ exp_manager:
   checkpoint_callback_params:
     async_save: True
     every_n_train_steps: 1000
-    always_save_nemo: False # saves nemo file during validation, not implemented for model parallel
-    save_nemo_on_train_end: False # not recommended when training large models on clusters with short time limits
+    always_save_nemo: False # Saves nemo file during validation, not implemented for model parallel
+    save_nemo_on_train_end: False # Not recommended when training large models on clusters with short time limits
     filename: 'megatron_llama_3_1_70b-{step}-{consumed_samples}'
     model_parallel_size: ${multiply:${training.model.tensor_model_parallel_size}, ${training.model.pipeline_model_parallel_size}}
     every_n_epochs: null
@@ -76,6 +76,7 @@ model:
   restore_from_path: null # Set this to a .nemo file path to restore only the model weights.
   restore_from_ckpt: null # Set this to a training ckpt path to restore both model weights and optimizer states
   # NOTE(tj.solergibert): https://github.com/NVIDIA/NeMo/blob/23c7de1b6e5858547541f26d2baa20d5371ea141/examples/nlp/language_modeling/megatron_gpt_pretraining.py#L62
+  # Otherwise the PTL Trainer will resume from the -latest checkpoint. 
 
   # use GPTModel from megatron.core
   mcore_gpt: True
@@ -123,6 +124,7 @@ model:
   openai_gelu: False
   normalize_attention_scores: True
   position_embedding_type: rope
+  rotary_base: 500000.0
   rotary_percentage: 1.0
   attention_type: multihead
   share_embeddings_and_output_weights: False

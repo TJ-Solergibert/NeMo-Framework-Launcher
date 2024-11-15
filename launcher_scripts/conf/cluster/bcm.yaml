@@ -3,9 +3,8 @@ gres: gpu:4
 cpus_per_task: 72
 environment: /store/swissai/a06/.NeMo/container/nemo-latest.toml
 account: a06
-# reservation: sai-a06 # NOTE(tj.solergibert) Weekend testing
+# reservation: sai-a06 # NOTE(tj.solergibert) 15/11 Still NO reservation 
 mem: 460000
-exclude: nid[005049,005796,005807]
 
 srun_args:
 - --cpus-per-task
